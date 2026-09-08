@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+
+# Runtime state and logs are created locally by the application.
+data/autonomous_lab.json
+data/*-shm
+data/*-wal
+data/screen_learning.db
+logs/*.log
