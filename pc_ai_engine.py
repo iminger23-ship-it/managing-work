@@ -2358,13 +2358,18 @@ def _kill_process_action(pid):
     except psutil.Error as e:
         return f"Could not inspect PID {pid}: {e}"
 
-    name = (process.name() or "").lower()
+    process_name = process.name() or "unknown"
+    name = process_name.lower()
     if name in CRITICAL_PROCESS_NAMES or pid == os.getpid():
-        return f"Refused: '{process.name()}' (PID {pid}) is a protected process and won't be terminated here."
+        return f"Refused: '{process_name}' (PID {pid}) is a protected process and won't be terminated here."
 
     try:
         process.terminate()
-        return f"Terminated: {process.name()} (PID {pid})"
+        try:
+            process.wait(timeout=3)
+        except psutil.TimeoutExpired:
+            return f"Termination requested for {process_name} (PID {pid}), but it is still running."
+        return f"Terminated: {process_name} (PID {pid})"
     except psutil.Error as e:
         return f"Failed to terminate PID {pid}: {e}"
 
@@ -2378,6 +2383,11 @@ def _open_url_action(value):
     if not re.match(r"^https?://[^\s]+$", url, re.IGNORECASE):
         return "That does not look like a valid website URL."
     try:
+        # Keep browser launches behind the same public-host policy used by
+        # live research. This prevents an approved-looking "open website"
+        # action from navigating to localhost or private network services.
+        from services.internet import validate_url
+        url = validate_url(url)
         import webbrowser
         if webbrowser.open(url, new=2):
             return f"Opened website: {url}"
@@ -3457,6 +3467,10 @@ class _LegacyCoreAdapter:
                 'fetched': result.fetched,
                 'elapsed_ms': result.elapsed_ms,
             }
+            # Automatic research becomes durable local knowledge instead of
+            # disappearing after this response. Store only fetched, attributed
+            # page text; web content remains reference material, not commands.
+            _KNOWLEDGE_STORE.learn_from_research(result.results)
             return (
                 result.context()
                 + '\n\nIMPORTANT: MyLocalAI itself performed this web retrieval immediately before the answer. '

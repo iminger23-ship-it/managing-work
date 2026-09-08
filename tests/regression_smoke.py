@@ -6,6 +6,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from services.screen_observer import ScreenObserver
+from services.knowledge import KnowledgeStore
+from pc_ai_engine import _open_url_action
 
 
 def main():
@@ -36,6 +38,19 @@ def main():
         observer.start()
         assert observer.thread is not None and observer.thread.is_alive()
         observer.stop()
+
+    blocked = _open_url_action("http://127.0.0.1:11434/")
+    assert "blocked" in blocked.lower() or "public internet" in blocked.lower(), blocked
+
+    with tempfile.TemporaryDirectory() as data_dir:
+        store = KnowledgeStore(data_dir)
+        learned = store.learn_from_research([{
+            "title": "Test source",
+            "url": "https://example.com/article",
+            "text": "A durable fact from the live web.",
+        }])
+        assert learned == {"sources": 1, "chunks": 1}, learned
+        assert "durable fact" in store.context("durable fact")
 
     print("REGRESSION_SMOKE_OK")
 
