@@ -4,6 +4,7 @@ import sqlite3
 import threading
 import urllib.parse
 import urllib.request
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from .internet import fetch
@@ -15,9 +16,20 @@ class KnowledgeStore:
     def __init__(self, data_dir: str):
         self.data_dir = Path(data_dir); self.data_dir.mkdir(parents=True, exist_ok=True)
         self.path = self.data_dir / 'knowledge.db'; self.lock = threading.RLock(); self._init()
+    @contextmanager
     def _db(self):
-        c = sqlite3.connect(self.path, timeout=10, check_same_thread=False); c.row_factory = sqlite3.Row
-        c.execute('PRAGMA journal_mode=WAL'); c.execute('PRAGMA synchronous=NORMAL'); return c
+        c = sqlite3.connect(self.path, timeout=10, check_same_thread=False)
+        c.row_factory = sqlite3.Row
+        c.execute('PRAGMA journal_mode=WAL')
+        c.execute('PRAGMA synchronous=NORMAL')
+        try:
+            yield c
+            c.commit()
+        except Exception:
+            c.rollback()
+            raise
+        finally:
+            c.close()
     def _init(self):
         with self.lock, self._db() as db:
             db.executescript("""
@@ -59,6 +71,22 @@ class KnowledgeStore:
         return len(pieces)
     def ingest_url(self, url, title=None):
         doc = fetch(url); title = title or doc['url']; count = self.add_document(title, doc['url'], doc['text'], 'web'); return title, doc['url'], count
+
+    def learn_from_research(self, results, source_type='live_web'):
+        """Persist bounded, attributed page text returned by live research."""
+        learned = 0
+        chunks = 0
+        for item in results or []:
+            text = str(item.get('text') or '').strip()
+            url = str(item.get('final_url') or item.get('url') or '').strip()
+            if not text or not url:
+                continue
+            title = str(item.get('title') or url).strip()[:300]
+            count = self.add_document(title, url, text[:12000], source_type)
+            if count:
+                learned += 1
+                chunks += count
+        return {'sources': learned, 'chunks': chunks}
     def ingest_github(self, repo, branch=''):
         repo = repo.strip().strip('/')
         if repo.lower().startswith('https://github.com/'):

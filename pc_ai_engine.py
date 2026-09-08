@@ -3467,6 +3467,10 @@ class _LegacyCoreAdapter:
                 'fetched': result.fetched,
                 'elapsed_ms': result.elapsed_ms,
             }
+            # Automatic research becomes durable local knowledge instead of
+            # disappearing after this response. Store only fetched, attributed
+            # page text; web content remains reference material, not commands.
+            _KNOWLEDGE_STORE.learn_from_research(result.results)
             return (
                 result.context()
                 + '\n\nIMPORTANT: MyLocalAI itself performed this web retrieval immediately before the answer. '
