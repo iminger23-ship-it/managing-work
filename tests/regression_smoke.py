@@ -6,6 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from services.screen_observer import ScreenObserver
+from pc_ai_engine import _open_url_action
 
 
 def main():
@@ -36,6 +37,9 @@ def main():
         observer.start()
         assert observer.thread is not None and observer.thread.is_alive()
         observer.stop()
+
+    blocked = _open_url_action("http://127.0.0.1:11434/")
+    assert "blocked" in blocked.lower() or "public internet" in blocked.lower(), blocked
 
     print("REGRESSION_SMOKE_OK")
 
