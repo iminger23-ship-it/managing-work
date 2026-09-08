@@ -1,0 +1,38 @@
+[
+  {
+    "title": "OpenAI GPT-5.6 builder guide",
+    "url": "https://openai.com/index/builders-guide-to-gpt-5-6/",
+    "date": "2026-08-13",
+    "topic": "coding/agents/efficiency"
+  },
+  {
+    "title": "OpenAI GPT-5.6 in Kiro",
+    "url": "https://openai.com/index/gpt-5-6-in-kiro/",
+    "date": "2026-08-24",
+    "topic": "coding/agents"
+  },
+  {
+    "title": "Anthropic multiagent systems",
+    "url": "https://www.anthropic.com/research/multiagent-systems",
+    "date": "2026-08-13",
+    "topic": "agents"
+  },
+  {
+    "title": "Anthropic automated researchers",
+    "url": "https://www.anthropic.com/research/automated-researchers-mitigate-alignment-failures",
+    "date": "2026-08-28",
+    "topic": "self-improvement/evaluation"
+  },
+  {
+    "title": "Anthropic CHIVE",
+    "url": "https://alignment.anthropic.com/2026/chive/",
+    "date": "2026-08-21",
+    "topic": "interpretability/evaluation"
+  },
+  {
+    "title": "Google DeepMind August 2026 research",
+    "url": "https://deepmind.google/",
+    "date": "2026-08-01",
+    "topic": "multimodal/agents"
+  }
+]
